@@ -176,7 +176,7 @@ pub fn init_state(state: AppState) {
 }
 
 pub fn create_router() -> Router {
-    Router::with_hoop(max_size(10 * 1024 * 1024)) // 10MB limit
+    Router::with_hoop(max_size(1024 * 1024 * 1024)) // 1GB limit
         .push(Router::with_path("/").get(handlers::index))
         .push(Router::with_path("/healthz").get(handlers::health_check))
         .push(Router::with_path("/metrics").get(metrics_handler))
