@@ -86,7 +86,7 @@ impl Settings {
                 page_size: config
                     .get("page_size")
                     .and_then(|v| v.as_integer())
-                    .unwrap_or(1100) as i64,
+                    .unwrap_or(1100),
                 sync_v1_enabled: config
                     .get("sync_v1_enabled")
                     .and_then(|v| v.as_bool())
@@ -209,9 +209,8 @@ async fn shutdown_signal() {
 #[cfg(target_family = "windows")]
 async fn shutdown_signal() {
     tokio::signal::ctrl_c()
-        .expect("failed to register signal handler")
-        .recv()
-        .await;
+        .await
+        .expect("failed to register signal handler");
     eprintln!("Shutting down gracefully...");
 }
 
