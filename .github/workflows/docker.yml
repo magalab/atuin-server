@@ -29,10 +29,17 @@ jobs:
         with:
           targets: x86_64-unknown-linux-musl,aarch64-unknown-linux-musl
 
-      - name: Install musl-tools
+      - name: Install cross-compilation toolchains
         run: |
           sudo apt-get update
-          sudo apt-get install -y musl-tools pkg-config libssl-dev sqlite3 libsqlite3-dev
+          sudo apt-get install -y \
+            musl-tools \
+            gcc-aarch64-linux-gnu \
+            libc6-dev-arm64-cross \
+            pkg-config \
+            libssl-dev \
+            sqlite3 \
+            libsqlite3-dev
 
       - name: Cache cargo registry
         uses: actions/cache@v5
@@ -52,6 +59,8 @@ jobs:
           PKG_CONFIG_ALLOW_CROSS: 1
           OPENSSL_LIB_DIR: /usr/lib/x86_64-linux-gnu
           OPENSSL_INCLUDE_DIR: /usr/include
+          # Use aarch64-linux-gnu-gcc as linker for arm64 musl target
+          CARGO_TARGET_AARCH64_UNKNOWN_LINUX_MUSL_LINKER: aarch64-linux-gnu-gcc
         run: |
           cargo build --release --target x86_64-unknown-linux-musl --bin atuin-server
           cargo build --release --target aarch64-unknown-linux-musl --bin atuin-server
