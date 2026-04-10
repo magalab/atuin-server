@@ -64,8 +64,8 @@ semver = "1"
 # HTTP types
 http = "1"
 
-# HTTP client for webhooks
-reqwest = { version = "0.12", features = ["json"] }
+# HTTP client for webhooks (using rustls to avoid OpenSSL cross-compilation issues)
+reqwest = { version = "0.13", default-features = false, features = ["json", "rustls-tls"] }
 
 [features]
 default = []
