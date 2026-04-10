@@ -1,5 +1,6 @@
 use once_cell::sync::OnceCell;
 use salvo::conn::TcpListener;
+use salvo::limiter::LimitedBodyReader;
 use salvo::prelude::*;
 use salvo::writing::Text;
 use serde::{Deserialize, Serialize};
@@ -11,6 +12,15 @@ use atuin_server_sqlite::Sqlite;
 use crate::handlers;
 use crate::middleware;
 use metrics_exporter_prometheus::{Matcher, PrometheusBuilder, PrometheusHandle};
+
+/// Get default database URI based on ATUIN_CONFIG_DIR
+fn default_db_uri() -> String {
+    if let Ok(config_dir) = std::env::var("ATUIN_CONFIG_DIR") {
+        format!("sqlite://{}/atuin.db", config_dir)
+    } else {
+        "sqlite:///atuin.db".to_string()
+    }
+}
 
 fn setup_metrics_recorder() -> PrometheusHandle {
     const EXPONENTIAL_SECONDS: &[f64] = &[
@@ -57,7 +67,13 @@ pub struct Settings {
 
 impl Settings {
     pub fn new() -> anyhow::Result<Self> {
-        let config_path = std::path::Path::new("atuin.toml");
+        // Check ATUIN_CONFIG_DIR first, then fall back to current directory
+        let config_path = if let Ok(config_dir) = std::env::var("ATUIN_CONFIG_DIR") {
+            std::path::Path::new(&config_dir).join("server.toml")
+        } else {
+            std::path::Path::new("server.toml").to_path_buf()
+        };
+
         if config_path.exists() {
             let contents = std::fs::read_to_string(config_path)?;
             let config: toml::Value = contents.parse()?;
@@ -108,7 +124,7 @@ impl Settings {
                     db_uri: config
                         .get("db_uri")
                         .and_then(|v| v.as_str())
-                        .unwrap_or("sqlite:///atuin.db")
+                        .unwrap_or_else(|| default_db_uri().as_str())
                         .to_string(),
                     read_db_uri: config
                         .get("read_db_uri")
@@ -129,7 +145,7 @@ impl Settings {
                 register_webhook_url: None,
                 register_webhook_username: String::new(),
                 db_settings: DbSettings {
-                    db_uri: "sqlite:///atuin.db".to_string(),
+                    db_uri: default_db_uri(),
                     read_db_uri: None,
                 },
             })
@@ -188,6 +204,7 @@ pub fn create_router() -> Router {
         .push(Router::with_path("/api/v0/record/next").get(handlers::v0_record_next))
         .push(Router::with_path("/api/v0/store").delete(handlers::v0_store_delete))
         // Middleware
+        .hoop(LimitedBodyReader::new(50 * 1024 * 1024)) // 50MB limit for record uploads
         .hoop(middleware::clacks_overhead)
         .hoop(middleware::version_header)
 }

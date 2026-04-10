@@ -43,28 +43,37 @@ docker pull ghcr.io/lurenyang418/atuin-server:latest
 # Docker Hub
 docker pull lurenyang/atuin-server:latest
 
-# Run with persistent data (using defaults)
+# Run with persistent data (only data directory is exposed to host)
 docker run -d -p 8888:8888 \
-  -v /path/to/data:/app \
+  -v /path/to/data:/app/data \
   ghcr.io/lurenyang418/atuin-server:latest
 
 # Run with custom configuration
 docker run -d -p 8888:8888 \
-  -v /path/to/data:/app \
-  -v /path/to/your-server.toml:/app/server.toml \
+  -v /path/to/config:/app/data \
+  -v /path/to/your-server.toml:/app/data/server.toml \
   ghcr.io/lurenyang418/atuin-server:latest
 ```
 
-**Default values (when no config is mounted):**
-- `db_uri = "sqlite:///atuin.db"` → `/app/atuin.db`
+**Container directory structure:**
+```
+/app/
+├── atuin-server     # Binary (not exposed to host)
+└── data/
+    ├── server.toml  # Configuration
+    └── atuin.db     # Database
+```
+
+**Default values:**
+- `db_uri = "sqlite:///app/data/atuin.db"`
 - `host = "0.0.0.0"`, `port = 8888`
 - `open_registration = true`
 
 ## Configuration
 
-Configuration file location (in order of priority):
-1. `ATUIN_CONFIG_DIR/server.toml` environment variable (default: `/app`)
-2. `./atuin.toml` (current directory)
+Configuration file location: `ATUIN_CONFIG_DIR/server.toml` (default: `/app/data`)
+
+```toml
 
 ```toml
 # host to bind, can also be passed via CLI args
@@ -77,7 +86,7 @@ port = 8888
 open_registration = true
 
 # sqlite
-db_uri = "sqlite:///var/lib/atuin/atuin.db"
+db_uri = "sqlite:///app/data/atuin.db"
 
 # Maximum size for one history entry
 max_history_length = 8192
@@ -107,7 +116,7 @@ sync_v1_enabled = true
 | `max_record_size` | `1073741824` | Max record size (bytes) |
 | `page_size` | `1100` | Sync page size |
 | `sync_v1_enabled` | `true` | Enable legacy sync API |
-| `db_uri` | `sqlite:///var/lib/atuin/atuin.db` | Database URI |
+| `db_uri` | `sqlite:///app/data/atuin.db` | Database URI |
 | `register_webhook_url` | - | Webhook URL for new registrations |
 | `register_webhook_username` | - | Webhook username |
 

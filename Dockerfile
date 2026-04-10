@@ -7,7 +7,7 @@ RUN apk add --no-cache ca-certificates tzdata
 WORKDIR /app
 
 ENV RUST_LOG=atuin_server=info
-ENV ATUIN_CONFIG_DIR=/app
+ENV ATUIN_CONFIG_DIR=/app/data
 
 EXPOSE 8888
 
