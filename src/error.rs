@@ -102,7 +102,10 @@ mod tests {
 
     #[test]
     fn payload_too_large_maps_to_413() {
-        assert_eq!(ServerError::PayloadTooLarge.status(), StatusCode::PAYLOAD_TOO_LARGE);
+        assert_eq!(
+            ServerError::PayloadTooLarge.status(),
+            StatusCode::PAYLOAD_TOO_LARGE
+        );
     }
 
     #[test]
