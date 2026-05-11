@@ -15,7 +15,7 @@ categories = ["command-line-utilities", "web-programming"]
 
 [dependencies]
 # Web framework
-salvo = "0.92"
+salvo = "0.93"
 
 # atuin-crates - reuse official implementation from crates.io
 atuin-server-database = "18"
